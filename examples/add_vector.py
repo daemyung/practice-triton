@@ -42,7 +42,7 @@ def add_kernel(x_ptr, y_ptr, z_ptr, size, BLOCK_SIZE: tl.constexpr):
     # 프로그램 ID와 BLOCK_SIZE를 이용하여 프로그램의 첫 번째 블록 인덱스를 계산합니다.
     offset = pid * BLOCK_SIZE
 
-    # 프로그램에 해당하는 블록 ID를 생성합니다..
+    # 프로그램에 해당하는 블록 ID를 생성합니다.
     bid = offset + tl.arange(0, BLOCK_SIZE)
 
     # 실행이 필요한 블록 마스크를 계산합니다.
