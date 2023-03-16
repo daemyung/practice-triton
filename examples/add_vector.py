@@ -43,20 +43,20 @@ def add_kernel(x_ptr, y_ptr, z_ptr, size, BLOCK_SIZE: tl.constexpr):
     offset = pid * BLOCK_SIZE
 
     # 프로그램에 해당하는 블록 ID를 생성합니다.
-    bid = offset + tl.arange(0, BLOCK_SIZE)
+    tid = offset + tl.arange(0, BLOCK_SIZE)
 
     # 실행이 필요한 블록 마스크를 계산합니다.
-    exe = bid < size
+    exe = tid < size
 
     # 프로그램에서 계산에 필요한 데이터를 입력 텐서로부터 읽습니다.
-    x = tl.load(x_ptr + bid, mask=exe)
-    y = tl.load(y_ptr + bid, mask=exe)
+    x = tl.load(x_ptr + tid, mask=exe)
+    y = tl.load(y_ptr + tid, mask=exe)
 
     # 덧셈을 합니다.
     z = x + y
 
     # 덧셈 결과를 출력 텐서에 저장합니다.
-    tl.store(z_ptr + bid, z, mask=exe)
+    tl.store(z_ptr + tid, z, mask=exe)
 
 def add(x: torch.Tensor, y: torch.Tensor):
     """
@@ -75,8 +75,13 @@ def add(x: torch.Tensor, y: torch.Tensor):
     # SPMD(Single Program Multiple Data)를 따르기 위해 동시에 실행해야하는 인스턴스의 개수를 계산합니다.
     grid = lambda meta: (max(1, triton.cdiv(n, meta['BLOCK_SIZE'])), )
 
+    # 커널을 위한 메타 정보를 정의합니다.
+    meta = {
+        'BLOCK_SIZE': 1024
+    }
+
     # 커널을 실행하여 덧셈을 계산합니다.
-    add_kernel[grid](x, y, z, n, BLOCK_SIZE=512)
+    add_kernel[grid](x, y, z, n, **meta)
 
     # 계산 결과를 반환합니다.
     return z
