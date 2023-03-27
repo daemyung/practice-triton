@@ -4,3 +4,4 @@ torchaudio
 matplotlib
 pandas
 triton
+tabulate
